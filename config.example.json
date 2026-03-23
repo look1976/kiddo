@@ -1,0 +1,9 @@
+{
+  "github_token": "YOUR_GITHUB_PAT_TOKEN_HERE",
+  "github_repo": "owner/repository",
+  "github_branch": "main",
+  "github_config_file": "schedules.csv",
+  "check_interval_seconds": 60,
+  "cleanup_interval_seconds": 300,
+  "log_level": "info"
+}

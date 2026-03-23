@@ -1,0 +1,86 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/kardianos/service"
+	"github.com/look/kiddo/internal/app"
+	"github.com/look/kiddo/internal/logger"
+)
+
+var log = logger.Get()
+
+func main() {
+	// Initialize logger
+	if err := logger.Init(); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create service config
+	svcConfig := &service.Config{
+		Name:        "Kiddo",
+		DisplayName: "Kiddo Parental Control Service",
+		Description: "Controls computer usage time for authorized users",
+		Option: service.KeyValue{
+			"Restart": "on-failure",
+		},
+	}
+
+	// Create application instance
+	prg := &app.Program{}
+
+	// Create service instance
+	svc, err := service.New(prg, svcConfig)
+	if err != nil {
+		log.Fatalf("Failed to create service: %v", err)
+	}
+
+	// Handle command-line arguments
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "install":
+			err = svc.Install()
+			if err != nil {
+				log.Fatalf("Failed to install service: %v", err)
+			}
+			fmt.Println("Service installed successfully")
+			return
+		case "uninstall":
+			err = svc.Uninstall()
+			if err != nil {
+				log.Fatalf("Failed to uninstall service: %v", err)
+			}
+			fmt.Println("Service uninstalled successfully")
+			return
+		case "start":
+			err = svc.Start()
+			if err != nil {
+				log.Fatalf("Failed to start service: %v", err)
+			}
+			fmt.Println("Service started successfully")
+			return
+		case "stop":
+			err = svc.Stop()
+			if err != nil {
+				log.Fatalf("Failed to stop service: %v", err)
+			}
+			fmt.Println("Service stopped successfully")
+			return
+		case "restart":
+			err = svc.Restart()
+			if err != nil {
+				log.Fatalf("Failed to restart service: %v", err)
+			}
+			fmt.Println("Service restarted successfully")
+			return
+		}
+	}
+
+	// Run service
+	err = svc.Run()
+	if err != nil {
+		log.Errorf("Service run failed: %v", err)
+	}
+}

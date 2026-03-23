@@ -1,0 +1,19 @@
+# Kiddo Schedule File
+# Format: Username, Day-of-week, Start-hour-End-hour
+# Example entries showing allowed login times
+
+Janek,Mon,16-21
+Janek,Tue,16-21
+Janek,Wed,16-21
+Janek,Thu,16-21
+Janek,Fri,17-23
+Janek,Sat,13-23
+Janek,Sun,13-21
+
+Igor,Mon,17-20
+Igor,Tue,17-20
+Igor,Wed,17-20
+Igor,Thu,17-20
+Igor,Fri,18-22
+Igor,Sat,14-20
+Igor,Sun,14-19
