@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/look/kiddo/internal/config"
 	"github.com/look/kiddo/internal/logger"
@@ -121,7 +120,6 @@ func (c *Cleaner) getLocalUsers() ([]string, error) {
 	// -----------------------------------------------
 	// The command completed successfully.
 
-	inUserList := false
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 
@@ -138,7 +136,6 @@ func (c *Cleaner) getLocalUsers() ([]string, error) {
 			// Skip if it looks like a separator or header
 			if !strings.Contains(username, "-") {
 				users = append(users, username)
-				inUserList = true
 			}
 		}
 	}

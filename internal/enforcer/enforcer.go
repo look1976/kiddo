@@ -1,7 +1,6 @@
 package enforcer
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"

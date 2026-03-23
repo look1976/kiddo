@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/kardianos/service"
 	"github.com/look/kiddo/internal/cleanup"
 	"github.com/look/kiddo/internal/config"
 	"github.com/look/kiddo/internal/enforcer"
@@ -29,7 +30,7 @@ type Program struct {
 }
 
 // Start implements service.Service interface - called when service starts
-func (p *Program) Start(svc interface{}) error {
+func (p *Program) Start(svc service.Service) error {
 	log.Infof("=== Kiddo Service Starting ===")
 
 	// Create config directory
@@ -90,7 +91,7 @@ func (p *Program) Start(svc interface{}) error {
 }
 
 // Stop implements service.Service interface - called when service stops
-func (p *Program) Stop(svc interface{}) error {
+func (p *Program) Stop(svc service.Service) error {
 	log.Infof("=== Kiddo Service Stopping ===")
 
 	// Signal the run loop to stop
