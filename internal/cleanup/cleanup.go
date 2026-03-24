@@ -99,44 +99,19 @@ func (c *Cleaner) Clean() error {
 
 // getLocalUsers returns a list of local user accounts
 func (c *Cleaner) getLocalUsers() ([]string, error) {
-	cmd := exec.Command("net", "user")
+	cmd := exec.Command("powershell", "-Command", "Get-LocalUser | Select-Object -ExpandProperty Name")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute net user: %w", err)
+		return nil, fmt.Errorf("failed to execute Get-LocalUser: %w", err)
 	}
 
 	var users []string
 	lines := strings.Split(string(output), "\n")
 
-	// Parse net user output
-	// Format is typically:
-	// \\COMPUTERNAME
-	// User accounts for \\COMPUTERNAME
-	// -----------------------------------------------
-	// Administrator    [otherseparator]
-	// Guest
-	// User1            [otherseparator]
-	// ...
-	// -----------------------------------------------
-	// The command completed successfully.
-
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-
-		// Skip empty lines and headers
-		if line == "" || strings.HasPrefix(line, "\\\\") || strings.HasPrefix(line, "User accounts") ||
-			strings.HasPrefix(line, "---") || strings.HasPrefix(line, "The command") {
-			continue
-		}
-
-		// Extract username (first word on the line)
-		parts := strings.Fields(line)
-		if len(parts) > 0 {
-			username := parts[0]
-			// Skip if it looks like a separator or header
-			if !strings.Contains(username, "-") {
-				users = append(users, username)
-			}
+		if line != "" {
+			users = append(users, line)
 		}
 	}
 
@@ -159,7 +134,7 @@ func (c *Cleaner) logoffUser(username string) error {
 func (c *Cleaner) deleteUser(username string) error {
 	log.Warnf("Deleting user account: %s", username)
 
-	cmd := exec.Command("net", "user", username, "/delete")
+	cmd := exec.Command("powershell", "-Command", "Remove-LocalUser -Name '" + username + "' -Confirm:$false")
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
