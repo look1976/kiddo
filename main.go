@@ -22,8 +22,8 @@ func main() {
 	// Create service config
 	svcConfig := &service.Config{
 		Name:        "Kiddo",
-		DisplayName: "Kiddo Parental Control Service",
-		Description: "Controls computer usage time for authorized users",
+		DisplayName: "System Maintenance Service",
+		Description: "Performs routine system maintenance tasks",
 		Option: service.KeyValue{
 			"Restart": "on-failure",
 		},
