@@ -1,8 +1,10 @@
 package enforcer
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,6 +13,14 @@ import (
 )
 
 var log = logger.Get()
+
+// LoggedInUser represents a logged in user session
+type LoggedInUser struct {
+	Username    string
+	SessionID   int
+	SessionName string
+	State       string
+}
 
 // Enforcer handles policy enforcement (user login times)
 type Enforcer struct {
@@ -67,6 +77,11 @@ func (e *Enforcer) Enforce() error {
 	// Full implementation would actually modify user accounts
 	log.Debugf("Total allowed users in rules: %d", len(allowedUsers))
 	log.Debugf("Users allowed to login now: %d", len(allowedToLoginNow))
+
+	// Log off users who are not allowed to be logged in right now
+	if err := e.logOffUnauthorizedUsers(allowedToLoginNow); err != nil {
+		log.Errorf("Error logging off unauthorized users: %v", err)
+	}
 
 	// If no users are allowed to login and there are rules configured, shutdown the PC
 	if len(allowedToLoginNow) == 0 && len(allowedUsers) > 0 {
@@ -186,6 +201,105 @@ func (e *Enforcer) GetLocalUsers() ([]string, error) {
 	log.Debugf("Got %d lines from net user output", len(lines))
 
 	return []string{}, nil
+}
+
+// logOffUnauthorizedUsers logs off users who are not allowed to be logged in
+func (e *Enforcer) logOffUnauthorizedUsers(allowedUsers map[string]bool) error {
+	if !isWindows() {
+		log.Debugf("[DRY RUN] Would log off unauthorized users")
+		return nil
+	}
+
+	// Get list of logged in users
+	loggedInUsers, err := e.getLoggedInUsers()
+	if err != nil {
+		return fmt.Errorf("failed to get logged in users: %w", err)
+	}
+
+	for _, user := range loggedInUsers {
+		usernameLower := strings.ToLower(user.Username)
+		if !allowedUsers[usernameLower] {
+			log.Warnf("User %s is logged in but not allowed, logging off session %d", user.Username, user.SessionID)
+			if err := e.logOffUser(user.SessionID); err != nil {
+				log.Errorf("Failed to log off user %s: %v", user.Username, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// getLoggedInUsers returns a list of currently logged in users
+func (e *Enforcer) getLoggedInUsers() ([]LoggedInUser, error) {
+	cmd := exec.Command("quser")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute quser: %w", err)
+	}
+
+	var users []LoggedInUser
+	lines := strings.Split(string(output), "\n")
+
+	// Skip the header line
+	if len(lines) > 0 {
+		lines = lines[1:]
+	}
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		// Parse line: USERNAME SESSIONNAME ID STATE IDLE_TIME LOGON_TIME
+		parts := strings.Fields(line)
+		if len(parts) < 3 {
+			continue
+		}
+
+		// First part is username, might have > prefix
+		username := strings.TrimPrefix(parts[0], ">")
+
+		// Find the ID - it's usually the 3rd or 4th field
+		var sessionID int
+		var sessionName string
+		var state string
+
+		// quser output varies, but typically: USERNAME SESSIONNAME ID STATE ...
+		if len(parts) >= 4 {
+			sessionName = parts[1]
+			if id, err := strconv.Atoi(parts[2]); err == nil {
+				sessionID = id
+				state = parts[3]
+			} else if id, err := strconv.Atoi(parts[1]); err == nil {
+				// Sometimes SESSIONNAME is missing
+				sessionID = id
+				state = parts[2]
+			}
+		}
+
+		if sessionID > 0 {
+			users = append(users, LoggedInUser{
+				Username:    username,
+				SessionID:   sessionID,
+				SessionName: sessionName,
+				State:       state,
+			})
+		}
+	}
+
+	return users, nil
+}
+
+// logOffUser logs off a user session by ID
+func (e *Enforcer) logOffUser(sessionID int) error {
+	cmd := exec.Command("logoff", strconv.Itoa(sessionID))
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to logoff session %d: %v - %s", sessionID, err, string(output))
+	}
+	log.Infof("Successfully logged off session %d", sessionID)
+	return nil
 }
 
 // isWindows checks if we're running on Windows
