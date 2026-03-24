@@ -131,8 +131,8 @@ func ParseRules(content string) ([]Rule, error) {
 			continue
 		}
 
-		if len(record) < 4 {
-			return nil, fmt.Errorf("invalid rule format (need 4 fields): %v", record)
+		if len(record) < 3 {
+			return nil, fmt.Errorf("invalid rule format (need 3 fields): %v", record)
 		}
 
 		username := strings.TrimSpace(record[0])
