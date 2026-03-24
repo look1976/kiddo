@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 
 	"github.com/kardianos/service"
 	"github.com/look/kiddo/internal/app"
@@ -48,6 +49,15 @@ func main() {
 			fmt.Println("Service installed successfully")
 			return
 		case "uninstall":
+			// Clean up scheduled tasks created by the service
+			log.Info("Cleaning up scheduled tasks...")
+			cmd := exec.Command("powershell", "-Command", "Get-ScheduledTask | Where-Object {$_.TaskName -like 'Kiddo_*'} | Unregister-ScheduledTask -Confirm:$false")
+			if output, err := cmd.CombinedOutput(); err != nil {
+				log.Warnf("Failed to clean up scheduled tasks: %v - %s", err, string(output))
+			} else {
+				log.Info("Scheduled tasks cleaned up successfully")
+			}
+
 			err = svc.Uninstall()
 			if err != nil {
 				log.Fatalf("Failed to uninstall service: %v", err)

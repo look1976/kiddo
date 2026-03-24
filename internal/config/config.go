@@ -33,7 +33,7 @@ type AppConfig struct {
 
 	// Check settings
 	CheckIntervalSeconds int `json:"check_interval_seconds"` // How often to check GitHub (default: 60)
-	CleanupIntervalSeconds int `json:"cleanup_interval_seconds"` // How often to clean unauthorized users (default: 300)
+	CleanupIntervalSeconds int `json:"cleanup_interval_seconds"` // How often to clean unauthorized users (default: 60)
 
 	// Logging
 	LogLevel string `json:"log_level"` // debug, info, warn, error (default: info)
@@ -57,7 +57,7 @@ func DefaultConfig() *AppConfig {
 		GitHubBranch: "main",
 		ConfigFile: "schedules.csv",
 		CheckIntervalSeconds: 60,
-		CleanupIntervalSeconds: 300,
+		CleanupIntervalSeconds: 60,
 		LogLevel: "info",
 		LogDir: filepath.Join(configDir, "logs"),
 		ConfigDir: configDir,

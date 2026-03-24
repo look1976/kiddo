@@ -4,6 +4,6 @@
   "github_branch": "main",
   "github_config_file": "schedules.csv",
   "check_interval_seconds": 60,
-  "cleanup_interval_seconds": 300,
+  "cleanup_interval_seconds": 60,
   "log_level": "info"
 }
