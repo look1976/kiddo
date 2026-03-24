@@ -68,6 +68,15 @@ func (e *Enforcer) Enforce() error {
 	log.Debugf("Total allowed users in rules: %d", len(allowedUsers))
 	log.Debugf("Users allowed to login now: %d", len(allowedToLoginNow))
 
+	// If no users are allowed to login and there are rules configured, shutdown the PC
+	if len(allowedToLoginNow) == 0 && len(allowedUsers) > 0 {
+		log.Warnf("No users allowed to login at current time, initiating PC shutdown")
+		cmd := exec.Command("shutdown", "/s", "/t", "60") // 60 second warning
+		if err := cmd.Run(); err != nil {
+			log.Errorf("Failed to initiate shutdown: %v", err)
+		}
+	}
+
 	return nil
 }
 
